@@ -4,6 +4,7 @@
 local favorites = {
   { lhs = "<leader>ca", desc = "Code action" },
   { lhs = "<leader>rn", desc = "Rename symbol" },
+  { lhs = "<C-o>", desc = "Jump back (after gd / go to definition)" },
   { lhs = "<leader>gg", desc = "Lazygit (Root Dir)" },
   { lhs = "<leader>gv", desc = "Diffview: uncommitted work (tree + index)" },
   { lhs = "<leader>gm", desc = "Diffview: branch commits vs trunk" },
