@@ -1,13 +1,27 @@
 -- Change-review surface: file panel on the left, diff on the right.
 -- LazyVim already owns <leader>gd/<leader>gf/<leader>gg, so this lives on <leader>gv.
-local function toggle(cmd)
+-- Diffview views live per tabpage, so get_current_view() misses one that is
+-- open in another tab and we would end up with two. Focus any matching view
+-- first; only open a new one when none exists. DiffView always carries a
+-- `files` dict, FileHistoryView does not - that is how we tell them apart.
+local function focus_or_open(cmd, history)
   return function()
     local lib = require("diffview.lib")
-    if lib.get_current_view() then
-      vim.cmd("DiffviewClose")
-    else
-      vim.cmd(cmd)
+    local cur_tab = vim.api.nvim_get_current_tabpage()
+    for _, view in ipairs(lib.views) do
+      if
+        vim.api.nvim_tabpage_is_valid(view.tabpage)
+        and (view.files == nil) == (history ~= nil)
+      then
+        if view.tabpage == cur_tab then
+          vim.cmd("DiffviewClose")
+        else
+          vim.api.nvim_set_current_tabpage(view.tabpage)
+        end
+        return
+      end
     end
+    vim.cmd(cmd)
   end
 end
 
@@ -63,8 +77,8 @@ return {
   "sindrets/diffview.nvim",
   cmd = { "DiffviewOpen", "DiffviewClose", "DiffviewFileHistory", "DiffviewToggleFiles" },
   keys = {
-    { "<leader>gv", toggle("DiffviewOpen"), desc = "Diffview (working tree)" },
-    { "<leader>gV", toggle("DiffviewFileHistory %"), desc = "Diffview (file history)" },
+    { "<leader>gv", focus_or_open("DiffviewOpen"), desc = "Diffview (working tree)" },
+    { "<leader>gV", focus_or_open("DiffviewFileHistory %", true), desc = "Diffview (file history)" },
     { "<leader>gm", diff_trunk, desc = "Diffview (vs trunk)" },
     { "<leader>gC", diff_commit, desc = "Diffview (pick commit vs HEAD)" },
   },
