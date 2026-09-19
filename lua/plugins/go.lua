@@ -18,13 +18,16 @@ return {
   },
   {
     "mfussenegger/nvim-lint",
-    opts = {
-      linters = {
-        golangcilint = {
-          prepend_args = { "--config", vim.fn.expand("~/.golangci.yml") },
-        },
-      },
-    },
+    opts = function(_, opts)
+      opts.linters = opts.linters or {}
+      opts.linters.golangcilint = opts.linters.golangcilint or {}
+      local config = vim.fn.expand("~/.golangci.yml")
+      if vim.fn.filereadable(config) == 1 then
+        opts.linters.golangcilint.prepend_args = { "--config", config }
+      else
+        opts.linters.golangcilint.prepend_args = {}
+      end
+    end,
   },
   {
     "nvim-neotest/neotest",

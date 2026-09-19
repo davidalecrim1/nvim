@@ -10,6 +10,15 @@ vim.keymap.set("n", "<leader>v", "<cmd>vsplit<cr><cmd>wincmd =<cr>", { desc = "S
 vim.keymap.set("n", "<leader>-", "<cmd>split<cr><cmd>wincmd =<cr>", { desc = "Split below (vertical)" })
 vim.keymap.del("n", "<leader>|")
 
+-- Terminal toggle, same action LazyVim binds to <c-/> (works in normal and terminal mode)
+local toggle_terminal = function()
+  local util = require("lazyvim.util")
+  require("snacks.terminal").focus(nil, { cwd = util.root() })
+end
+for _, lhs in ipairs({ "<leader>ft", "<c-/>", "<c-_>", "<c-`>" }) do
+  vim.keymap.set({ "n", "t" }, lhs, toggle_terminal, { desc = "Toggle Terminal" })
+end
+
 -- macOS Option/Command word + line editing. iTerm already sends these through;
 -- <M-b>/<M-f> cover the common Esc+b / Esc+f Option+arrow encoding.
 local macos_edit = {
