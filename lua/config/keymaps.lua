@@ -80,3 +80,50 @@ for _, spec in ipairs(macos_edit) do
     vim.keymap.set("x", lhs, spec.x, { desc = spec.desc })
   end
 end
+
+-- Visual-mode context yank: copies the selection plus the absolute path and
+-- line range, so pasting into an AI agent carries its own provenance.
+local context_yank_fence = {
+  sh = "bash",
+  zsh = "bash",
+  javascript = "js",
+  javascriptreact = "jsx",
+  typescript = "ts",
+  typescriptreact = "tsx",
+  markdown = "md",
+}
+
+local function context_yank()
+  local first, last = vim.fn.getpos("v"), vim.fn.getpos(".")
+  if first[2] > last[2] or (first[2] == last[2] and first[3] > last[3]) then
+    first, last = last, first
+  end
+
+  local l1, l2 = first[2], last[2]
+  local lines = vim.api.nvim_buf_get_lines(0, l1 - 1, l2, false)
+  if vim.fn.mode() == "v" then
+    if l1 == l2 then
+      lines[1] = lines[1]:sub(first[3], last[3])
+    else
+      lines[1] = lines[1]:sub(first[3])
+      lines[#lines] = lines[#lines]:sub(1, last[3])
+    end
+  end
+
+  local ft = vim.bo.filetype
+  local lang = context_yank_fence[ft] or ft
+  local path = vim.api.nvim_buf_get_name(0)
+  if path == "" then
+    path = "[No Name]"
+  end
+  local ref = path .. ":" .. (l1 == l2 and tostring(l1) or (l1 .. "-" .. l2))
+  local fence = lang ~= "" and ("```" .. lang) or "```"
+  local payload = fence .. "\n" .. table.concat(lines, "\n") .. "\n```\n\n" .. ref
+
+  vim.fn.setreg("+", payload)
+  vim.fn.setreg('"', payload)
+  vim.notify(string.format("Copied %d lines + ref", #lines), vim.log.levels.INFO)
+  vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", false)
+end
+
+vim.keymap.set({ "x", "s" }, "Y", context_yank, { desc = "Yank selection + file/line context" })
