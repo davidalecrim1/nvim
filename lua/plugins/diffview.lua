@@ -75,7 +75,8 @@ end
 
 return {
   "sindrets/diffview.nvim",
-  cmd = { "DiffviewOpen", "DiffviewClose", "DiffviewFileHistory", "DiffviewToggleFiles" },
+  lazy = false,
+  cmd ={ "DiffviewOpen", "DiffviewClose", "DiffviewFileHistory", "DiffviewToggleFiles" },
   keys = {
     { "<leader>gv", focus_or_open("DiffviewOpen"), desc = "Diffview (working tree)" },
     { "<leader>gV", focus_or_open("DiffviewFileHistory %", true), desc = "Diffview (file history)" },
