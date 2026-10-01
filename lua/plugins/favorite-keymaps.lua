@@ -5,6 +5,7 @@ local favorites = {
   { lhs = "<leader>ca", desc = "code: action" },
   { lhs = "<leader>rn", desc = "code: rename symbol" },
   { lhs = "<C-o>", desc = "code: jump back (after gd / go to definition)" },
+  { lhs = "K", desc = "lsp: hover" },
   { lhs = "gd", desc = "lsp: go to definition" },
   { lhs = "gr", desc = "lsp: go to references" },
   { lhs = "<leader>gg", desc = "git: lazygit (root dir)" },
