@@ -73,6 +73,25 @@ local function diff_commit()
   })
 end
 
+-- Diffview folds unchanged regions so only the diff is visible. Toggling turns
+-- that off and shows the whole file. The choice is re-applied whenever a diff
+-- buffer opens so it sticks while browsing the file list.
+local show_full_file = false
+
+local function toggle_full_file()
+  show_full_file = not show_full_file
+  local lib = require("diffview.lib")
+  for _, view in ipairs(lib.views) do
+    if vim.api.nvim_tabpage_is_valid(view.tabpage) and view.cur_layout then
+      for _, win in ipairs(view.cur_layout.windows) do
+        if vim.api.nvim_win_is_valid(win.id) then
+          vim.wo[win.id].foldenable = not show_full_file
+        end
+      end
+    end
+  end
+end
+
 return {
   "sindrets/diffview.nvim",
   lazy = false,
@@ -88,10 +107,8 @@ return {
     return {
       enhanced_diff_hl = true,
       hooks = {
-        -- Diffview folds every unchanged hunk by default. Show the full file like
-        -- VS Code/Zed do; zM folds the unchanged parts back when a diff is huge.
         diff_buf_win_enter = function(_, winid)
-          vim.wo[winid].foldenable = false
+          vim.wo[winid].foldenable = not show_full_file
         end,
       },
       view = {
@@ -107,6 +124,7 @@ return {
           { "n", "q", "<cmd>DiffviewClose<cr>", { desc = "Close diffview" } },
           -- g<C-x> is the default but awkward to reach; gl = "layout".
           { "n", "gl", actions.cycle_layout, { desc = "Cycle layout (side-by-side / stacked)" } },
+          { "n", "zF", toggle_full_file, { desc = "Toggle full file / diff only" } },
         },
         file_panel = {
           { "n", "q", "<cmd>DiffviewClose<cr>", { desc = "Close diffview" } },
@@ -118,6 +136,7 @@ return {
           { "n", "S", actions.stage_all, { desc = "Stage all" } },
           { "n", "U", actions.unstage_all, { desc = "Unstage all" } },
           { "n", "X", actions.restore_entry, { desc = "Discard changes in entry" } },
+          { "n", "zF", toggle_full_file, { desc = "Toggle full file / diff only" } },
         },
         file_history_panel = {
           { "n", "q", "<cmd>DiffviewClose<cr>", { desc = "Close diffview" } },
