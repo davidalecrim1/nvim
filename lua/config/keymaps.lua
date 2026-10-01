@@ -10,6 +10,37 @@ vim.keymap.set("n", "<leader>v", "<cmd>vsplit<cr><cmd>wincmd =<cr>", { desc = "S
 vim.keymap.set("n", "<leader>-", "<cmd>split<cr><cmd>wincmd =<cr>", { desc = "Split below (vertical)" })
 vim.keymap.del("n", "<leader>|")
 
+-- Open a file in the current window and drop the buffer it replaced, so the
+-- picker doesn't leave a trail of buffers behind. Buffers with unsaved changes
+-- or that are still shown in another window are kept.
+vim.keymap.set("n", "<leader>fo", function()
+  local replaced = vim.api.nvim_get_current_buf()
+  Snacks.picker.files({
+    confirm = function(picker, item)
+      local path = item and (item.file or (item.buf and vim.api.nvim_buf_get_name(item.buf)))
+      if not path or path == "" then
+        return
+      end
+      if vim.fn.mode():sub(1, 1) == "i" then
+        vim.cmd.stopinsert()
+      end
+      picker:close()
+      vim.schedule(function()
+        vim.cmd.edit(vim.fn.fnameescape(path))
+        if
+          replaced ~= vim.api.nvim_get_current_buf()
+          and vim.api.nvim_buf_is_valid(replaced)
+          and vim.bo[replaced].buftype == ""
+          and not vim.bo[replaced].modified
+          and #vim.fn.win_findbuf(replaced) == 0
+        then
+          pcall(vim.api.nvim_buf_delete, replaced, {})
+        end
+      end)
+    end,
+  })
+end, { desc = "Open file (replace current buffer)" })
+
 -- Terminal toggle, same action LazyVim binds to <c-/> (works in normal and terminal mode)
 local toggle_terminal = function()
   local util = require("lazyvim.util")
