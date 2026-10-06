@@ -7,17 +7,18 @@
 -- Or remove existing autocmds by their group name (which is prefixed with `lazyvim_` for the defaults)
 -- e.g. vim.api.nvim_del_augroup_by_name("lazyvim_wrap_spell")
 
--- Diffview index/commit panes are named diffview:// but keep buftype empty so
--- Neovim treats them as real files. helm_ls panics on that URI; format/lint
--- should not run on a review buffer either.
-local function is_diffview_buf(buf)
-  return vim.api.nvim_buf_get_name(buf):sub(1, 11) == "diffview://"
+-- Diff review buffers are named diffview:// (diffview) or differ:// (differ) but
+-- keep buftype empty/scratch so Neovim treats them as real files. helm_ls panics
+-- on those URIs; format/lint should not run on a review buffer either.
+local function is_diff_buf(buf)
+  local name = vim.api.nvim_buf_get_name(buf)
+  return name:sub(1, 11) == "diffview://" or name:sub(1, 9) == "differ://"
 end
 
 vim.api.nvim_create_autocmd("FileType", {
   group = vim.api.nvim_create_augroup("diffview_no_tools", { clear = true }),
   callback = function(ev)
-    if is_diffview_buf(ev.buf) then
+    if is_diff_buf(ev.buf) then
       vim.b[ev.buf].autoformat = false
     end
   end,
@@ -26,7 +27,7 @@ vim.api.nvim_create_autocmd("FileType", {
 local start = vim.lsp.start
 function vim.lsp.start(config, opts)
   local bufnr = vim._resolve_bufnr(opts and opts.bufnr)
-  if is_diffview_buf(bufnr) then
+  if is_diff_buf(bufnr) then
     return
   end
   return start(config, opts)
@@ -41,7 +42,7 @@ local function patch_lint()
   lint_patched = true
   local try_lint = lint.try_lint
   lint.try_lint = function(...)
-    if is_diffview_buf(0) then
+    if is_diff_buf(0) then
       return
     end
     return try_lint(...)

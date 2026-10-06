@@ -73,10 +73,10 @@ local function diff_commit()
   })
 end
 
--- Diffview folds unchanged regions so only the diff is visible. Toggling turns
--- that off and shows the whole file. The choice is re-applied whenever a diff
--- buffer opens so it sticks while browsing the file list.
-local show_full_file = false
+-- Show the whole file by default; <leader>gF folds unchanged regions so only
+-- the diff is visible. The choice is re-applied whenever a diff buffer opens
+-- so it sticks while browsing the file list.
+local show_full_file = true
 
 local function toggle_full_file()
   show_full_file = not show_full_file
@@ -93,9 +93,9 @@ local function toggle_full_file()
 end
 
 return {
-  "sindrets/diffview.nvim",
+  "dlyongemallo/diffview-plus.nvim",
   lazy = false,
-  cmd ={ "DiffviewOpen", "DiffviewClose", "DiffviewFileHistory", "DiffviewToggleFiles" },
+  cmd = { "DiffviewOpen", "DiffviewClose", "DiffviewFileHistory", "DiffviewToggleFiles" },
   keys = {
     { "<leader>gv", focus_or_open("DiffviewOpen"), desc = "Diffview (working tree)" },
     { "<leader>gV", focus_or_open("DiffviewFileHistory %", true), desc = "Diffview (file history)" },
@@ -124,7 +124,9 @@ return {
           { "n", "q", "<cmd>DiffviewClose<cr>", { desc = "Close diffview" } },
           -- g<C-x> is the default but awkward to reach; gl = "layout".
           { "n", "gl", actions.cycle_layout, { desc = "Cycle layout (side-by-side / stacked)" } },
-          { "n", "zF", toggle_full_file, { desc = "Toggle full file / diff only" } },
+          { "n", "<leader>gF", toggle_full_file, { desc = "Toggle full file / diff only" } },
+          { "n", "<leader>e", actions.focus_files, { desc = "Focus changed files" } },
+          { "n", "<leader>b", actions.toggle_files, { desc = "Toggle changed files" } },
         },
         file_panel = {
           { "n", "q", "<cmd>DiffviewClose<cr>", { desc = "Close diffview" } },
@@ -136,7 +138,9 @@ return {
           { "n", "S", actions.stage_all, { desc = "Stage all" } },
           { "n", "U", actions.unstage_all, { desc = "Unstage all" } },
           { "n", "X", actions.restore_entry, { desc = "Discard changes in entry" } },
-          { "n", "zF", toggle_full_file, { desc = "Toggle full file / diff only" } },
+          { "n", "<leader>gF", toggle_full_file, { desc = "Toggle full file / diff only" } },
+          { "n", "<leader>e", actions.focus_files, { desc = "Focus changed files" } },
+          { "n", "<leader>b", actions.toggle_files, { desc = "Toggle changed files" } },
         },
         file_history_panel = {
           { "n", "q", "<cmd>DiffviewClose<cr>", { desc = "Close diffview" } },
