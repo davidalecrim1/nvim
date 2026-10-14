@@ -40,6 +40,10 @@ local favorites = {
   { lhs = "<leader>fb", desc = "buffer: switch to open buffer" },
   { lhs = "<leader>br", desc = "buffer: delete to the right" },
   { lhs = "<leader>bl", desc = "buffer: delete to the left" },
+  { lhs = "<leader>sg", desc = "search: grep (root dir)" },
+  { lhs = "<leader>sG", desc = "search: grep (cwd)" },
+  { lhs = "<leader>sw", desc = "search: word or selection (root dir)" },
+  { lhs = "<leader>sW", desc = "search: word or selection (cwd)" },
   { lhs = "<leader>sr", desc = "search: search and replace" },
 }
 
