@@ -124,6 +124,37 @@ local context_yank_fence = {
   markdown = "md",
 }
 
+-- diffview renders committed and staged revisions in synthetic buffers named
+-- `diffview://<git-dir>/<rev>/<path>`, plus a shared `diffview://null`
+-- placeholder for the absent side of an added or deleted file. Walk the current
+-- view back to the real file so the ref never carries the fake name, and tag
+-- the revision so text that is not the working-tree copy is not mistaken for it.
+local function diffview_source()
+  local ok, lib = pcall(require, "diffview.lib")
+  if not ok then
+    return nil
+  end
+  local view = lib.get_current_view()
+  local layout = view and view.cur_layout
+  local bufnr = vim.api.nvim_get_current_buf()
+  for _, win in ipairs(layout and layout.windows or {}) do
+    local file = win.file
+    if file and file.bufnr == bufnr and file.absolute_path then
+      return file
+    end
+  end
+  return nil
+end
+
+-- Best-effort real path for a `diffview://` buffer when no live view resolves it.
+local function path_from_diffview_name(name)
+  local toplevel, rel = name:match("^diffview://(.-)/%.git/[^/]+/(.+)$")
+  if toplevel then
+    return toplevel .. "/" .. rel
+  end
+  return name
+end
+
 local function context_yank()
   local first, last = vim.fn.getpos("v"), vim.fn.getpos(".")
   if first[2] > last[2] or (first[2] == last[2] and first[3] > last[3]) then
@@ -144,10 +175,28 @@ local function context_yank()
   local ft = vim.bo.filetype
   local lang = context_yank_fence[ft] or ft
   local path = vim.api.nvim_buf_get_name(0)
+  local note
+  if path:match("^diffview://") then
+    local file = diffview_source()
+    if file then
+      path = file.absolute_path
+      local rev, rev_type = file.rev, require("diffview.vcs.rev").RevType
+      if rev and rev.type == rev_type.COMMIT and rev.commit then
+        note = "(commit " .. rev:abbrev(7) .. ")"
+      elseif rev and rev.type == rev_type.STAGE then
+        note = rev.stage and rev.stage > 0 and ("(stage " .. rev.stage .. ")") or "(index)"
+      end
+    else
+      path = path_from_diffview_name(path)
+    end
+  end
   if path == "" then
     path = "[No Name]"
   end
   local ref = path .. ":" .. (l1 == l2 and tostring(l1) or (l1 .. "-" .. l2))
+  if note then
+    ref = ref .. " " .. note
+  end
   local fence = lang ~= "" and ("```" .. lang) or "```"
   local payload = fence .. "\n" .. table.concat(lines, "\n") .. "\n```\n\n" .. ref
 
