@@ -45,6 +45,9 @@ local favorites = {
   { lhs = "<leader>sw", desc = "search: word or selection (root dir)" },
   { lhs = "<leader>sW", desc = "search: word or selection (cwd)" },
   { lhs = "<leader>sr", desc = "search: search and replace" },
+  { lhs = "<leader>cp", desc = "markdown: preview in browser (toggle, markdown buffers only)" },
+  { lhs = "<leader>um", desc = "markdown: toggle render (current buffer)" },
+  { lhs = "<leader>uM", desc = "markdown: toggle render (all markdown buffers)" },
 }
 
 local function favorite_keymaps()

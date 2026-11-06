@@ -15,6 +15,18 @@ local function is_diff_buf(buf)
   return name:sub(1, 11) == "diffview://" or name:sub(1, 9) == "differ://"
 end
 
+-- Rendered tables are as wide as their content, so a wide table must not be
+-- soft-wrapped by Neovim: wrapped continuation lines lose the side borders.
+-- LazyVim turns 'wrap' on for text filetypes, so undo it here; <leader>uw
+-- toggles it back (at the cost of breaking wide table borders).
+vim.api.nvim_create_autocmd("FileType", {
+  group = vim.api.nvim_create_augroup("markdown_nowrap", { clear = true }),
+  pattern = { "markdown", "markdown.mdx" },
+  callback = function()
+    vim.opt_local.wrap = false
+  end,
+})
+
 vim.api.nvim_create_autocmd("FileType", {
   group = vim.api.nvim_create_augroup("diffview_no_tools", { clear = true }),
   callback = function(ev)
